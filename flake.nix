@@ -45,14 +45,22 @@
         postInstall = ''
           mv $out/bin/main $out/bin/llama
           mv $out/bin/server $out/bin/llama-server
-          mkdir -p $out/include
-          cp ${src}/llama.h $out/include/
+
+          mkdir $out/include
+
+          cp $src/llama.h $out/include
+          cp $src/llama-util.h $out/include
+          cp $src/ggml.h $out/include
+          cp $src/ggml-alloc.h $out/include
+
+          cp $src/k_quants.h $out/include
+          cp $src/ggml-mpi.h $out/include
         '';
         cmakeFlags = [ "-DLLAMA_BUILD_SERVER=ON" "-DLLAMA_MPI=ON" "-DBUILD_SHARED_LIBS=ON" "-DCMAKE_SKIP_BUILD_RPATH=ON" ];
       in
       {
         packages.default = pkgs.stdenv.mkDerivation {
-          inherit name src meta postPatch nativeBuildInputs buildInputs postInstall;
+          inherit name src meta postPatch nativeBuildInputs buildInputs;
           cmakeFlags = cmakeFlags
             ++ (if isAarch64 && isDarwin then [
             "-DCMAKE_C_FLAGS=-D__ARM_FEATURE_DOTPROD=1"
@@ -61,6 +69,8 @@
             "-DLLAMA_BLAS=ON"
             "-DLLAMA_BLAS_VENDOR=OpenBLAS"
           ]);
+          postInstall = (if isAarch64 && isDarwin then
+            nixpkgs.lib.concatLines [postInstall "cp $src/ggml-metal.h $out/include"] else postInstall);
         };
         packages.opencl = pkgs.stdenv.mkDerivation {
           inherit name src meta postPatch nativeBuildInputs postInstall;
@@ -70,7 +80,7 @@
           ];
         };
         packages.rocm = pkgs.stdenv.mkDerivation {
-          inherit name src meta postPatch nativeBuildInputs postInstall;
+          inherit name src meta postPatch nativeBuildInputs;
           buildInputs = with pkgs; buildInputs ++ [ hip hipblas rocblas ];
           cmakeFlags = cmakeFlags ++ [
             "-DLLAMA_HIPBLAS=1"
@@ -78,6 +88,7 @@
             "-DCMAKE_CXX_COMPILER=hipcc"
             "-DCMAKE_POSITION_INDEPENDENT_CODE=ON"
           ];
+          postInstall = nixpkgs.lib.concatLines [postInstall "cp $src/ggml-opencl.h $out/include"];
         };
         apps.llama-server = {
           type = "app";
