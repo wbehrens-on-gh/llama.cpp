@@ -71,7 +71,11 @@
             "-DLLAMA_BLAS_VENDOR=OpenBLAS"
           ]);
           postInstall = (if isAarch64 && isDarwin then
-            nixpkgs.lib.concatLines [postInstall "cp $src/ggml-metal.h $out/include"] else postInstall);
+            nixpkgs.lib.concatLines [
+              postInstall
+              "cp $src/ggml-metal.h $out/include"
+              "cp $src/ggml-metal.metal $out/bin"
+            ] else postInstall);
         };
         packages.opencl = pkgs.stdenv.mkDerivation {
           inherit name src meta postPatch nativeBuildInputs postInstall;
