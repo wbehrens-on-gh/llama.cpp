@@ -45,10 +45,13 @@
         postInstall = ''
           mv $out/bin/main $out/bin/llama
           mv $out/bin/server $out/bin/llama-server
-          #mkdir $out/include
+
+          cp $src/common/log.h $out/include
+          cp $src/common/common.h $out/include
+          cp $src/common/console.h $out/include
+          cp $src/common/grammar-parser.h $out/include
 
           cp $src/llama.h $out/include
-          #cp $src/llama-util.h $out/include
           cp $src/ggml.h $out/include
           cp $src/ggml-alloc.h $out/include
           cp $cmakeDir/build-info.h $out/include
